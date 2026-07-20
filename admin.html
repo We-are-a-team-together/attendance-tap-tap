@@ -3,195 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Tap-Tap - Admin Panel</title>
+<title>Attendance Tap-Tap - Admin</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-color:#fff;
-font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-min-height:100vh;
-position: relative;
-}
-body::before {
-content: '';
-position: fixed;
-top: 0; left: 0; right: 0; bottom: 0;
-background:
-radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%);
-pointer-events: none;
-z-index: 0;
-}
-.container { max-width:900px; margin:0 auto; padding:30px 20px; position: relative; z-index: 1; }
-header {
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:25px 0;
-margin-bottom:30px;
-border-bottom: 2px solid rgba(255,255,255,0.1);
-}
-.logo {
-font-size:36px;
-font-weight:900;
-background: linear-gradient(135deg, #06b6d4 0%, #f97316 50%, #a855f7 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-letter-spacing: 2px;
-}
-.badge {
-background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-color:#fff;
-padding:8px 16px;
-border-radius:20px;
-font-size:12px;
-font-weight:700;
-text-transform: uppercase;
-letter-spacing: 2px;
-box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-}
-.card {
-background: rgba(30, 41, 59, 0.8);
-backdrop-filter: blur(10px);
-padding:30px;
-border-radius:20px;
-margin-bottom:25px;
-border: 1px solid rgba(255,255,255,0.1);
-box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-}
-h2 {
-margin:0 0 25px;
-font-size:20px;
-color:#f1f5f9;
-font-weight:700;
-}
-.input-group { margin-bottom:20px; }
-label { display:block; font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; font-weight:600; }
-input {
-width:100%;
-padding:14px 16px;
-border-radius:12px;
-border:2px solid rgba(255,255,255,0.1);
-background: rgba(15, 23, 42, 0.6);
-color:#fff;
-font-size:15px;
-transition: all 0.3s ease;
-}
-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-input:focus {
-outline: none;
-border-color: #06b6d4;
-box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
-}
-.btn-group { display:flex; gap:12px; flex-wrap:wrap; margin-top:25px; }
-button {
-padding:14px 24px;
-border-radius:12px;
-border:none;
-font-weight:700;
-cursor:pointer;
-color:#fff;
-transition: all 0.3s ease;
-text-transform: uppercase;
-letter-spacing: 1px;
-font-size:14px;
-}
-.btn-save {
-background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-}
-.btn-cancel {
-background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
-}
-.btn-edit {
-background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-padding:10px 16px;
-font-size:12px;
-}
-.btn-delete {
-background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-padding:10px 16px;
-font-size:12px;
-}
-.btn-register {
-display:block;
-width:100%;
-background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-padding:20px;
-text-align:center;
-text-decoration:none;
-color:white;
-font-weight:700;
-border-radius:15px;
-margin-bottom:25px;
-box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
-transition: all 0.3s ease;
-font-size:16px;
-text-transform: uppercase;
-letter-spacing: 1px;
-}
-.btn-register:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
-.operative-item {
-background: rgba(15, 23, 42, 0.6);
-padding:20px;
-border-radius:15px;
-margin-bottom:15px;
-display:flex;
-justify-content:space-between;
-align-items:flex-start;
-border: 1px solid rgba(255,255,255,0.05);
-transition: all 0.3s ease;
-}
-.operative-item:hover {
-transform: translateX(5px);
-border-color: rgba(6, 182, 212, 0.3);
-box-shadow: 0 5px 20px rgba(6, 182, 212, 0.1);
-}
+body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; font-family:'Segoe UI', sans-serif; min-height:100vh; padding:20px; }
+.container { max-width:900px; margin:0 auto; }
+header { text-align:center; padding:30px 0; margin-bottom:30px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+.logo { font-size:36px; font-weight:900; background: linear-gradient(135deg, #06b6d4 0%, #f97316 50%, #a855f7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+.card { background: rgba(30, 41, 59, 0.8); padding:30px; border-radius:20px; margin-bottom:25px; border: 1px solid rgba(255,255,255,0.1); }
+h2 { margin:0 0 25px; font-size:20px; color:#f1f5f9; font-weight:700; }
+.user-item { background: rgba(15, 23, 42, 0.6); padding:20px; border-radius:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; border: 1px solid rgba(255,255,255,0.05); }
+.user-info { flex:1; }
 .name { font-weight:700; font-size:17px; color:#f1f5f9; margin-bottom:5px; }
 .details { font-size:13px; color:#94a3b8; line-height: 1.5; }
 .company { color:#f97316; font-weight:600; }
-.actions { display:flex; gap:10px; flex-shrink: 0; margin-left: 15px; }
-.status-msg {
-padding:16px 20px;
-border-radius:12px;
-text-align:center;
-font-weight:600;
-margin-bottom:25px;
-animation: slideIn 0.3s ease;
-}
-@keyframes slideIn {
-from { opacity: 0; transform: translateY(-10px); }
-to { opacity: 1; transform: translateY(0); }
-}
-.success {
-background: rgba(6, 78, 59, 0.6);
-color:#34d399;
-border: 1px solid rgba(52, 211, 153, 0.3);
-display:block;
-}
-.error {
-background: rgba(127, 29, 29, 0.6);
-color:#f87171;
-border: 1px solid rgba(248, 113, 113, 0.3);
-display:block;
-}
-.footer {
-text-align:center;
-font-size:12px;
-color:#64748b;
-margin-top:40px;
-padding:25px 0;
-border-top: 1px solid rgba(255,255,255,0.1);
-}
+.status-badge { padding:4px 10px; border-radius:10px; font-size:11px; font-weight:700; margin-left:10px; }
+.enrolled { background: rgba(16, 185, 129, 0.2); color:#34d399; }
+.not-enrolled { background: rgba(239, 68, 68, 0.2); color:#f87171; }
+.btn-delete { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:#fff; border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px; }
 .empty { text-align:center; color:#64748b; padding:40px; font-size:15px; }
+.footer { text-align:center; font-size:12px; color:#64748b; margin-top:40px; padding:25px 0; border-top: 1px solid rgba(255,255,255,0.1); }
 </style>
 </head>
 <body>
-<div class
+<div class="container">
+<header><div class="logo">ATTENDANCE TAP-TAP</div></header>
+
+<div class="card">
+<h2>👥 Registered Users</h2>
+<div id="userList"><div class="empty">Loading users...</div></div>
+</div>
+
+<div class="footer">We Are A Team Together Ltd © 2026</div>
+</div>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyAuqUFnN1Mv8cDf5aOF7Scls0Iz3ZxDTKc",
+authDomain: "attendance-tap-tap.firebaseapp.com",
+projectId: "attendance-tap-tap",
+storageBucket: "attendance-tap-tap.firebasestorage.app",
+messagingSenderId: "80163999372",
+appId: "1:80163999372:web:a1b661435f4a6959e6b5a9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const usersRef = db.ref('users');
+
+function escapeHtml(text) {
+if (!text) return '';
+const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+async function deleteUser(uid) {
+if (!confirm('⚠️ Delete this user and all their data?')) return;
+try {
+await usersRef.child(uid).remove();
+alert('✅ User deleted');
+} catch (err) { alert('Error: ' + err.message); }
+}
+
+usersRef.on('value', snap => {
+const listEl = document.getElementById('userList');
+let users = [];
+snap.forEach(child => { users.push({ id: child.key, ...child.val() }); });
+
+if (users.length === 0) {
+listEl.innerHTML = '<div class="empty">No users registered yet</div>';
+return;
+}
+
+users.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+listEl.innerHTML = users.map(u => `
+<div class="user-item">
+<div class="user-info">
+<div class="name">${escapeHtml(u.name || 'Unnamed')} <span class="status-badge ${u.faceEnrolled ? 'enrolled' : 'not-enrolled'}">${u.faceEnrolled ? '✅ Face Enrolled' : '❌ No Face'}</span></div>
+<div class="details">
+<span class="company">${escapeHtml(u.company || 'No Company')}</span> • ${escapeHtml(u.role || 'No Role')}
+<br> ${escapeHtml(u.email || 'No Email')} • 📞 ${escapeHtml(u.phone || 'No Phone')}
+${u.qualifications ? `<br>📜 ${escapeHtml(u.qualifications)}` : ''}
+</div>
+</div>
+<button class="btn-delete" onclick="deleteUser('${u.id}')">🗑 Delete</button>
+</div>
+`).join('');
+});
+</script>
+</body>
+</html>
 
