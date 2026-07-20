@@ -37,7 +37,135 @@ background: rgba(30, 41, 59, 0.8);
 padding:30px;
 border-radius:20px;
 margin-bottom:25px;
-border: 1px solid rgba(255,255,255,0.1);
+border: s ease;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+.btn-primary {
+background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+.btn-secondary {
+background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+}
+.btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+.status-msg {
+padding:16px 20px;
+border-radius:12px;
+text-align:center;
+font-weight:600;
+margin-bottom:25px;
+animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+from { opacity: 0; transform: translateY(-10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.success {
+background: rgba(6, 78, 59, 0.6);
+color:#34d399;
+border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.error {
+background: rgba(127, 29, 29, 0.6);
+color:#f87171;
+border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.info {
+background: rgba(30, 58, 138, 0.6);
+color:#93c5fd;
+border: 1px solid rgba(147, 197, 253, 0.3);
+}
+#video {
+width:100%;
+border-radius:15px;
+display:none;
+margin:20px 0;
+border: 3px solid rgba(6, 182, 212, 0.5);
+box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+#video.active {
+border-color: #10b981;
+box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+}
+.footer {
+text-align:center;
+font-size:12px;
+color:#64748b;
+margin-top:40px;
+padding:25px 0;
+border-top: 1px solid rgba(255,255,255,0.1);
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo">ATTENDANCE TAP-TAP</div>
+</header>
+
+<div id="statusMsg" class="status-msg" style="display:none;"></div>
+
+<!-- Login/Signup Form -->
+<div id="authForm" class="card">
+<h2>Sign Up / Log In</h2>
+
+<div class="input-group">
+<label>Email Address</label>
+<input type="email" id="email" placeholder="your@email.com" required>
+</div>
+
+<div class="input-group">
+<label>Password (min 6 characters)</label>
+<input type="password" id="password" placeholder="••••••••" required>
+</div>
+
+<button class="btn btn-primary" onclick="handleAuth()">Create Account / Sign In</button>
+<button class="btn btn-secondary" style="margin-top:10px;" onclick="toggleMode()">Switch to Sign Up Mode</button>
+</div>
+
+<!-- Face Enrollment Form -->
+<div id="faceEnrollment" class="card hidden">
+<h2>Enroll Your Face</h2>
+<p style="color:#94a3b8; margin-bottom:20px;">Position your face clearly in the camera for 3 seconds</p>
+
+<video id="video" autoplay muted playsinline></video>
+
+<div class="btn-group" style="display:flex; gap:10px;">
+<button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">Start Camera</button>
+<button class="btn btn-secondary" id="captureFaceBtn" onclick="captureFace()" disabled>Capture Face</button>
+</div>
+
+<div id="enrollmentStatus" style="margin-top:20px; text-align:center; color:#94a3b8;"></div>
+</div>
+
+<div class="footer">We Are A Team Together Ltd © 2026</div>
+</div>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+apiKey: "AIzaSyAuqUFnN1Mv8cDf5aOF7Scls0Iz3ZxDTKc",
+authDomain: "attendance-tap-tap.firebaseapp.com",
+projectId: "attendance-tap-tap",
+storageBucket: "attendance-tap-tap.firebasestorage.app",
+messagingSenderId: "80163999372",
+appId: "1:80163999372:web:a1b661435f4a6959e6b5a9"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// DOM Elements
+const authForm = document.getElementById('authForm');
+const faceEnrollment = document.getElementById('face1px solid rgba(255,255,255,0.1);
 }
 h2 {
 margin:0 0 25px;
@@ -90,6 +218,10 @@ box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
 background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
 }
+.btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
 .status-msg {
 padding:16px 20px;
 border-radius:12px;
@@ -112,6 +244,23 @@ background: rgba(127, 29, 29, 0.6);
 color:#f87171;
 border: 1px solid rgba(248, 113, 113, 0.3);
 }
+.info {
+background: rgba(30, 58, 138, 0.6);
+color:#93c5fd;
+border: 1px solid rgba(147, 197, 253, 0.3);
+}
+#video {
+width:100%;
+border-radius:15px;
+display:none;
+margin:20px 0;
+border: 3px solid rgba(6, 182, 212, 0.5);
+box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+#video.active {
+border-color: #10b981;
+box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+}
 .footer {
 text-align:center;
 font-size:12px;
@@ -120,6 +269,7 @@ margin-top:40px;
 padding:25px 0;
 border-top: 1px solid rgba(255,255,255,0.1);
 }
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -128,40 +278,39 @@ border-top: 1px solid rgba(255,255,255,0.1);
 <div class="logo">ATTENDANCE TAP-TAP</div>
 </header>
 
-<div id="authForm">
-<div class="card">
-<h2>Sign Up / Log In</h2>
 <div id="statusMsg" class="status-msg" style="display:none;"></div>
 
+<!-- Login/Signup Form -->
+<div id="authForm" class="card">
+<h2>Sign Up / Log In</h2>
+
 <div class="input-group">
-<label>Email</label>
+<label>Email Address</label>
 <input type="email" id="email" placeholder="your@email.com" required>
 </div>
 
 <div class="input-group">
-<label>Password</label>
+<label>Password (min 6 characters)</label>
 <input type="password" id="password" placeholder="••••••••" required>
 </div>
 
-<button class="btn btn-primary" onclick="handleAuth()">Sign In / Sign Up</button>
-<button class="btn btn-secondary" style="margin-top:10px;" onclick="toggleForm()">Switch to Sign Up</button>
-</div>
+<button class="btn btn-primary" onclick="handleAuth()">Create Account / Sign In</button>
+<button class="btn btn-secondary" style="margin-top:10px;" onclick="toggleMode()">Switch to Sign Up Mode</button>
 </div>
 
-<div id="faceEnrollment" style="display:none;">
-<div class="card">
+<!-- Face Enrollment Form -->
+<div id="faceEnrollment" class="card hidden">
 <h2>Enroll Your Face</h2>
-<p>Position your face clearly in the camera for 3 seconds</p>
+<p style="color:#94a3b8; margin-bottom:20px;">Position your face clearly in the camera for 3 seconds</p>
 
-<video id="video" autoplay muted playsinline style="width:100%; border-radius:10px; margin:20px 0;"></video>
+<video id="video" autoplay muted playsinline></video>
 
 <div class="btn-group" style="display:flex; gap:10px;">
-<button class="btn btn-primary" onclick="startCamera()">Start Camera</button>
-<button class="btn btn-secondary" onclick="captureFace()" id="captureBtn" disabled>Capture Face</button>
+<button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">Start Camera</button>
+<button class="btn btn-secondary" id="captureFaceBtn" onclick="captureFace()" disabled>Capture Face</button>
 </div>
 
-<div id="enrollmentStatus" style="margin-top:20px; text-align:center;"></div>
-</div>
+<div id="enrollmentStatus" style="margin-top:20px; text-align:center; color:#94a3b8;"></div>
 </div>
 
 <div class="footer">We Are A Team Together Ltd © 2026</div>
@@ -186,144 +335,424 @@ const db = firebase.database();
 // DOM Elements
 const authForm = document.getElementById('authForm');
 const faceEnrollment = document.getElementById('faceEnrollment');
+const statusMsg = document.getElementById('statusEnrollment');
 const statusMsg = document.getElementById('statusMsg');
-const captureBtn = document.getElementById('captureBtn');
+const video = document.getElementById('Msg');
+const video = document.getElementById('video');
+const captureFaceBtn = document.getElementByIdvideo');
+const captureFaceBtn = document.getElementById('captureFaceBtn');
+const enrollmentStatus = document('captureFaceBtn');
 const enrollmentStatus = document.getElementById('enrollmentStatus');
 
+// State.getElementById('enrollmentStatus');
+
+// State
+let videoStream = null;
+let modelsLoaded
 let videoStream = null;
 let modelsLoaded = false;
+let isSignupMode = true = false;
+let isSignupMode = true;
+
+// Show status message
+function showStatus(msg,;
 
 // Show status message
 function showStatus(msg, type) {
+statusMsg.textContent = msg type) {
 statusMsg.textContent = msg;
+statusMsg.className = 'status-msg ' +;
 statusMsg.className = 'status-msg ' + type;
+statusMsg.style.display = 'block'; type;
 statusMsg.style.display = 'block';
-setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
+setTimeout(() => { statusMsg.style.display =
+setTimeout(() => { statusMsg.style.display = 'none'; }, 5000); 'none'; }, 5000);
 }
 
 // Toggle between login and signup
-function toggleForm() {
-if (document.getElementById('authForm').style.display === 'none') {
-document.getElementById('authForm').style.display = 'block';
-document.getElementById('faceEnrollment').style.display = 'none';
+
+}
+
+// Toggle between login and signup
+function toggleMode() {
+isSignupMode = !function toggleMode() {
+isSignupMode = !isSignupMode;
+const btn = documentisSignupMode;
+const btn = document.querySelector('.btn-secondary');
+if (isSignupMode.querySelector('.btn-secondary');
+if (isSignupMode) {
+btn.textContent = 'Switch to Sign) {
+btn.textContent = 'Switch to Sign Up Mode';
+showStatus('Ready Up Mode';
+showStatus('Ready to create new account', 'info');
+} to create new account', 'info');
 } else {
-document.getElementById('authForm').style.display = 'none';
-document.getElementById('faceEnrollment').style.display = 'block';
+btn.textContent = 'Switch to Sign In else {
+btn.textContent = 'Switch to Sign In Mode';
+showStatus('Ready to sign in with Mode';
+showStatus('Ready to sign in with existing account', 'info');
+}
+} existing account', 'info');
 }
 }
 
 // Handle authentication
 async function handleAuth() {
-const email = document.getElementById('email').value;
-const password = document.getElementById('password').value;
 
-const isLogin = document.getElementById('authForm').style.display === 'block';
+// Handle authentication
+async function handleAuth() {
+const email = document.getElementById('email').value.trim
+const email = document.getElementById('email').value.trim();
+const password = document.getElementById('password').value();
+const password = document.getElementById('password').value.trim();
+
+if (!email || !.trim();
+
+if (!email || !password) {
+showStatus('❌ Please enterpassword) {
+showStatus('❌ Please enter both email and password', 'error');
+return; both email and password', 'error');
+return;
+}
+
+if (password.length
+}
+
+if (password.length < 6) {
+showStatus('❌ Password< 6) {
+showStatus('❌ Password must be at least 6 characters', 'error');
+must be at least 6 characters', 'error');
+return;
+}
 
 try {
-if (isLogin) {
-await auth.signInWithEmailAndPassword(email, password);
-showStatus('✅ Successfully logged in!', 'success');
-// Check if face is enrolled
-const user = auth.currentUser;
-const enrolled = (await db.ref('users/' + user.uid + '/faceEnrolled').once('value')).val();
-if (enrolled) {
-window.location.href = 'scan.html';
-} else {
-document.getElementById('authForm').style.display = 'none';
-document.getElementById('faceEnrollment').style.display = 'block';
+return;
 }
+
+try {
+if (isSignupMode) {
+if (isSignupMode) {
+// Create new account
+showStatus('Creating account...', // Create new account
+showStatus('Creating account...', 'info');
+const userCredential = await auth.createUser 'info');
+const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+const user = userWithEmailAndPassword(email, password);
+const user = userCredential.user;
+
+showStatus('✅ AccountCredential.user;
+
+showStatus('✅ Account created! Now enroll your face.', 'success'); created! Now enroll your face.', 'success');
+
+// Wait a moment for auth to
+
+// Wait a moment for auth to settle
+await new Promise(resolve => setTimeout(resolve, settle
+await new Promise(resolve => setTimeout(resolve, 1000));
+
+// Show face 1000));
+
+// Show face enrollment
+showFaceEnrollment();
+
+enrollment
+showFaceEnrollment();
+
 } else {
-await auth.createUserWithEmailAndPassword(email, password);
-showStatus('✅ Account created! Please enroll your face.', 'success');
-document.getElementById('authForm').style.display = 'none';
-document.getElementById('faceEnrollment').style.display = 'block';
+// Sign in existing user } else {
+// Sign in existing user
+showStatus('Signing in...', 'info');
+
+showStatus('Signing in...', 'info');
+await auth.signInWithEmailAndPassword(email, password);
+
+await auth.signInWithEmailAndPassword(email, password);
+
+// Check if face is already enrolled
+// Check if face is already enrolled
+const user = auth.currentUser;
+if (user) const user = auth.currentUser;
+if (user) {
+const enrolled = (await db.ref(' {
+const enrolled = (await db.ref('users/' + user.uid + '/faceEnrolled').onceusers/' + user.uid + '/faceEnrolled').once('value')).val();
+if (enrolled)('value')).val();
+if (enrolled) {
+showStatus('✅ Signed in! {
+showStatus('✅ Signed in! Redirecting...', 'success');
+setTimeout(() => Redirecting...', 'success');
+setTimeout(() => {
+window.location.href = 'scan.html'; {
+window.location.href = 'scan.html';
+}, 1500);
+
+}, 1500);
+} else {
+showStatus('✅ Signed } else {
+showStatus('✅ Signed in! Please enroll your face.', 'success');
+in! Please enroll your face.', 'success');
+await new Promise(resolve => setTimeout(resolve, await new Promise(resolve => setTimeout(resolve, 1000));
+showFaceEnrollment 1000));
+showFaceEnrollment();
+}
+}
+}
+();
+}
+}
 }
 } catch (err) {
-showStatus('❌ Error: ' + err.message, 'error');
+console.error(' } catch (err) {
+console.error('Auth error:', err);
+showStatus('Auth error:', err);
+showStatus(' Error: ' + err.message, 'error');
+Error: ' + err.message, 'error');
 }
+}
+
+// Show face enrollment section }
+}
+
+// Show face enrollment section
+function showFaceEnrollment() {
+authForm
+function showFaceEnrollment() {
+authForm.classList.add('hidden');
+faceEnrollment.classList.add('hidden');
+faceEnrollment.classList.remove('hidden');
+window.scrollTo(.classList.remove('hidden');
+window.scrollTo(0, 0);
+}
+
+// Start camera
+0, 0);
 }
 
 // Start camera
 async function startCamera() {
 try {
+async function startCamera() {
+try {
+showStatus('Starting camera...', 'info');
+enrollment showStatus('Starting camera...', 'info');
+enrollmentStatus.textContent = 'Starting camera...';
+
+videoStatus.textContent = 'Starting camera...';
+
+videoStream = await navigator.mediaDevices.getUserMedia({
 videoStream = await navigator.mediaDevices.getUserMedia({
 video: {
 facingMode: 'user',
-width: { ideal: 1280 },
+: {
+facingMode: 'user',
+width: { ideal: 1280 }, width: { ideal: 1280 },
+height: { ideal: 720 }
 height: { ideal: 720 }
 }
 });
 
-document.getElementById('video').srcObject = videoStream;
-captureBtn.disabled = false;
+video
+}
+});
+
+video.srcObject = videoStream;
+video.style.display =.srcObject = videoStream;
+video.style.display = 'block';
+video.classList.add('active');
+'block';
+video.classList.add('active');
+
+captureFaceBtn.disabled = false;
+captureFaceBtn.disabled = false;
+showStatus('✅ Camera started! Position your
 showStatus('✅ Camera started! Position your face clearly', 'success');
+enrollmentStatus.textContent = face clearly', 'success');
+enrollmentStatus.textContent = 'Camera ready. Click "Capture Face" when 'Camera ready. Click "Capture Face" when ready.';
+
+} catch ( ready.';
+
 } catch (err) {
+console.error('Camera error:', errerr) {
+console.error('Camera error:', err);
+showStatus('❌ Camera error);
 showStatus('❌ Camera error: ' + err.message, 'error');
+: ' + err.message, 'error');
+enrollmentStatus.textContent = 'Camera error: ' + enrollmentStatus.textContent = 'Camera error: ' + err.message;
+}
+}
+
+// Capture err.message;
 }
 }
 
 // Capture face
 async function captureFace() {
-try {
-showStatus('Capturing face...', 'success');
-enrollmentStatus.textContent = 'Capturing face...';
-
-// Load face recognition models
-if (!modelsLoaded) {
-await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
-await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
-await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
-modelsLoaded = true;
-}
-
-// Detect face
-const detection = await faceapi.detectSingleFace(
-document.getElementById('video'),
-new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.3 })
-).withFaceLandmarks()
-.withFaceDescriptor();
-
-if (!detection) {
-showStatus('❌ No face detected! Try better lighting', 'error');
-enrollmentStatus.textContent = 'No face detected';
+// face
+async function captureFace() {
+// Check if user is logged in
+const user = auth Check if user is logged in
+const user = auth.currentUser;
+if (!user) {
+show.currentUser;
+if (!user) {
+showStatus('❌ Not logged in! Please signStatus('❌ Not logged in! Please sign in first.', 'error');
+enrollment in first.', 'error');
+enrollmentStatus.textContent = 'Error: Not authenticated';Status.textContent = 'Error: Not authenticated';
 return;
 }
 
-// Save face descriptor
-const user = auth.currentUser;
-await db.ref('users/' + user.uid).update({
+try {
+return;
+}
+
+try {
+showStatus('Capturing face...', 'info');
+showStatus('Capturing face...', 'info');
+enrollmentStatus.textContent = 'Capturing face...';
+enrollmentStatus.textContent = 'Capturing face...';
+captureFaceBtn.disabled = true;
+
+captureFaceBtn.disabled = true;
+
+// Load face recognition models if not already
+// Load face recognition models if not already loaded
+if (!modelsLoaded) {
+enrollment loaded
+if (!modelsLoaded) {
+enrollmentStatus.textContent = 'Loading AI models...';
+awaitStatus.textContent = 'Loading AI models...';
+await faceapi.nets.tinyFaceDetector.loadFromUri(' faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
+face-api@1.7.12/model');
+await faceapi.nets.faceLandmark68Net await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vl.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.1admandic/face-api@1.7.12/model');
+await faceapi.nets.faceRecognition2/model');
+await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npmNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7/@vladmandic/face-api@1.7.12/model');
+modelsLoaded = true;.12/model');
+modelsLoaded = true;
+enrollmentStatus.textContent = 'AI models loaded.
+enrollmentStatus.textContent = 'AI models loaded. Detecting face...';
+}
+
+// Detecting face...';
+}
+
+// Wait a moment for video to stabilize
+await Wait a moment for video to stabilize
+await new Promise(resolve => setTimeout(resolve, 500 new Promise(resolve => setTimeout(resolve, 500));
+
+// Detect face
+const detection =));
+
+// Detect face
+const detection = await faceapi.detectSingleFace(
+video,
+await faceapi.detectSingleFace(
+video,
+new faceapi.TinyFaceDetectorOptions({ inputSize new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.: 640, scoreThreshold: 0.3 })
+).withFaceLandmarks()3 })
+).withFaceLandmarks()
+.withFaceDescriptor();
+
+if (!
+.withFaceDescriptor();
+
+if (!detection) {
+showStatus('detection) {
+showStatus(' No face detected! Try better lighting and position', ' No face detected! Try better lighting and position', 'error');
+enrollmentStatus.textContent = 'No face detectederror');
+enrollmentStatus.textContent = 'No face detected. Try again.';
+captureFaceBtn.disabled =. Try again.';
+captureFaceBtn.disabled = false;
+return;
+}
+
+false;
+return;
+}
+
+// Save face descriptor to database
+enrollment // Save face descriptor to database
+enrollmentStatus.textContent = 'Saving face data...';
+awaitStatus.textContent = 'Saving face data...';
+await db.ref('users/' + user.uid).update db.ref('users/' + user.uid).update({
+faceDescriptor: Array.from(detection.descriptor),({
 faceDescriptor: Array.from(detection.descriptor),
 faceEnrolled: true,
-createdAt: firebase.database.ServerValue.TIMESTAMP
+email
+faceEnrolled: true,
+email: user.email,
+createdAt: firebase: user.email,
+createdAt: firebase.database.ServerValue.TIMESTAMP,
+lastUpdated.database.ServerValue.TIMESTAMP,
+lastUpdated: firebase.database.ServerValue.TIMESTAMP
+});: firebase.database.ServerValue.TIMESTAMP
 });
+
+showStatus('✅ Face enrolled successfully!', '
 
 showStatus('✅ Face enrolled successfully!', 'success');
-enrollmentStatus.textContent = 'Face enrolled successfully!';
+enrollmentStatus.textContent = 'Successsuccess');
+enrollmentStatus.textContent = 'Success! Redirecting to scan page...';
 
-// Redirect to scan page
+//! Redirecting to scan page...';
+
+// Redirect to scan page after 2 seconds
+Redirect to scan page after 2 seconds
 setTimeout(() => {
+window.location.href = 'scan setTimeout(() => {
 window.location.href = 'scan.html';
 }, 2000);
+.html';
+}, 2000);
+
+} catch (err) {
+console.error
 } catch (err) {
 console.error('Face capture error:', err);
-showStatus('❌ Error: ' + err.message, 'error');
+show('Face capture error:', err);
+showStatus('❌ Error: ' + err.message,Status('❌ Error: ' + err.message, 'error');
+enrollmentStatus.textContent = 'Error 'error');
 enrollmentStatus.textContent = 'Error: ' + err.message;
+captureFaceBtn.disabled: ' + err.message;
+captureFaceBtn.disabled = false;
 }
 }
 
-// Initialize
-if (auth.currentUser) {
-// Check if face is enrolled
-const user = auth.currentUser;
-db.ref('users/' + user.uid + '/faceEnrolled').once('value', (snap) => {
-if (snap.val()) {
+// Check auth = false;
+}
+}
+
+// Check auth state on page load
+auth.onAuthStateChanged(async ( state on page load
+auth.onAuthStateChanged(async (user) => {
+if (user) {
+user) => {
+if (user) {
+// User is signed in
+const // User is signed in
+const enrolled = (await db.ref('users/' + user enrolled = (await db.ref('users/' + user.uid + '/faceEnrolled').once('value.uid + '/faceEnrolled').once('value')).val();
+if (enrolled) {
+')).val();
+if (enrolled) {
+// Already enrolled, redirect to scan page
+window // Already enrolled, redirect to scan page
 window.location.href = 'scan.html';
+} else {.location.href = 'scan.html';
 } else {
-document.getElementById('authForm').style.display = 'none';
-document.getElementById('faceEnrollment').style.display = 'block';
+// Not enrolled yet, show enrollment
+// Not enrolled yet, show enrollment form
+showFaceEnrollment();
+form
+showFaceEnrollment();
 }
+}
+// If no }
+}
+// If no user, show auth form (default)
 });
-}
+user, show auth form (default)
+});
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
