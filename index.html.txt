@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Tap-Tap - Register</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+color:#fff;
+font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+min-height:100vh;
+padding:20px;
+}
+.container { max-width:500px; margin:0 auto; }
+header {
+text-align:center;
+padding:30px 0;
+margin-bottom:20px;
+border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+.logo {
+font-size:36px;
+font-weight:900;
+background: linear-gradient(135deg, #06b6d4 0%, #f97316 50%, #a855f7 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+letter-spacing: 2px;
+}
+.card {
+background: rgba(30, 41, 59, 0.8);
+padding:30px;
+border-radius:20px;
+margin-bottom:25px;
+border: 1px solid rgba(255,255,255,0.1);
+}
+h2 {
+margin:0 0 25px;
+font-size:20px;
+color:#f1f5f9;
+font-weight:700;
+}
+.input-group { margin-bottom:20px; }
+label {
+display:block;
+font-size:12px;
+color:#94a3b8;
+text-transform:uppercase;
+letter-spacing:1px;
+margin-bottom:8px;
+font-weight:600;
+}
+input {
+width:100%;
+padding:14px 16px;
+border-radius:12px;
+border:2px solid rgba(255,255,255,0.1);
+background: rgba(15, 23, 42, 0.6);
+color:#fff;
+font-size:15px;
+transition: all 0.3s ease;
+}
+input:focus {
+outline: none;
+border-color: #06b6d4;
+box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+}
+.btn {
+width:100%;
+padding:14px 24px;
+border-radius:12px;
+border:none;
+font-weight:700;
+cursor:pointer;
+color:#fff;
+transition: all 0.3s ease;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+.btn-primary {
+background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+.btn-secondary {
+background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+}
+.status-msg {
+padding:16px 20px;
+border-radius:12px;
+text-align:center;
+font-weight:600;
+margin-bottom:25px;
+animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+from { opacity: 0; transform: translateY(-10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.success {
+background: rgba(6, 78, 59, 0.6);
+color:#34d399;
+border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.error {
+background: rgba(127, 29, 29, 0.6);
+color:#f87171;
+border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.footer {
+text-align:center;
+font-size:12px;
+color:#64748b;
+margin-top:40px;
+padding:25px 0;
+border-top: 1px solid rgba(255,255,255,0.1);
+}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo">ATTENDANCE TAP-TAP</div>
+</header>
+
+<div id="authForm">
+<div class="card">
+<h2>Sign Up / Log In</h2>
+<div id="statusMsg" class="status-msg" style="display:none;"></div>
+
+<div class="input-group">
+<label>Email</label>
+<input type="email" id="email" placeholder="your@email.com" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="••••••••" required>
+</div>
+
+<button class="btn btn-primary" onclick="handleAuth()">Sign In / Sign Up</button>
+<button class="btn btn-secondary" style="margin-top:10px;" onclick="toggleForm()">Switch to Sign Up</button>
+</div>
+</div>
+
+<div id="faceEnrollment" style="display:none;">
+<div class="card">
+<h2>Enroll Your Face</h2>
+<p>Position your face clearly in the camera for 3 seconds</p>
+
+<video id="video" autoplay muted playsinline style="width:100%; border-radius:10px; margin:20px 0;"></video>
+
+<div class="btn-group" style="display:flex; gap:10px;">
+<button class="btn btn-primary" onclick="startCamera()">Start Camera</button>
+<button class="btn btn-secondary" onclick="captureFace()" id="captureBtn" disabled>Capture Face</button>
+</div>
+
+<div id="enrollmentStatus" style="margin-top:20px; text-align:center;"></div>
+</div>
+</div>
+
+<div class="footer">We Are A Team Together Ltd © 2026</div>
+</div>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+apiKey: "AIzaSyAuqUFnN1Mv8cDf5aOF7Scls0Iz3ZxDTKc",
+authDomain: "attendance-tap-tap.firebaseapp.com",
+projectId: "attendance-tap-tap",
+storageBucket: "attendance-tap-tap.firebasestorage.app",
+messagingSenderId: "80163999372",
+appId: "1:80163999372:web:a1b661435f4a6959e6b5a9"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// DOM Elements
+const authForm = document.getElementById('authForm');
+const faceEnrollment = document.getElementById('faceEnrollment');
+const statusMsg = document.getElementById('statusMsg');
+const captureBtn = document.getElementById('captureBtn');
+const enrollmentStatus = document.getElementById('enrollmentStatus');
+
+let videoStream = null;
+let modelsLoaded = false;
+
+// Show status message
+function showStatus(msg, type) {
+statusMsg.textContent = msg;
+statusMsg.className = 'status-msg ' + type;
+statusMsg.style.display = 'block';
+setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
+}
+
+// Toggle between login and signup
+function toggleForm() {
+if (document.getElementById('authForm').style.display === 'none') {
+document.getElementById('authForm').style.display = 'block';
+document.getElementById('faceEnrollment').style.display = 'none';
+} else {
+document.getElementById('authForm').style.display = 'none';
+document.getElementById('faceEnrollment').style.display = 'block';
+}
+}
+
+// Handle authentication
+async function handleAuth() {
+const email = document.getElementById('email').value;
+const password = document.getElementById('password').value;
+
+const isLogin = document.getElementById('authForm').style.display === 'block';
+
+try {
+if (isLogin) {
+await auth.signInWithEmailAndPassword(email, password);
+showStatus('✅ Successfully logged in!', 'success');
+// Check if face is enrolled
+const user = auth.currentUser;
+const enrolled = (await db.ref('users/' + user.uid + '/faceEnrolled').once('value')).val();
+if (enrolled) {
+window.location.href = 'scan.html';
+} else {
+document.getElementById('authForm').style.display = 'none';
+document.getElementById('faceEnrollment').style.display = 'block';
+}
+} else {
+await auth.createUserWithEmailAndPassword(email, password);
+showStatus('✅ Account created! Please enroll your face.', 'success');
+document.getElementById('authForm').style.display = 'none';
+document.getElementById('faceEnrollment').style.display = 'block';
+}
+} catch (err) {
+showStatus('❌ Error: ' + err.message, 'error');
+}
+}
+
+// Start camera
+async function startCamera() {
+try {
+videoStream = await navigator.mediaDevices.getUserMedia({
+video: {
+facingMode: 'user',
+width: { ideal: 1280 },
+height: { ideal: 720 }
+}
+});
+
+document.getElementById('video').srcObject = videoStream;
+captureBtn.disabled = false;
+showStatus('✅ Camera started! Position your face clearly', 'success');
+} catch (err) {
+showStatus('❌ Camera error: ' + err.message, 'error');
+}
+}
+
+// Capture face
+async function captureFace() {
+try {
+showStatus('Capturing face...', 'success');
+enrollmentStatus.textContent = 'Capturing face...';
+
+// Load face recognition models
+if (!modelsLoaded) {
+await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
+await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
+await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
+modelsLoaded = true;
+}
+
+// Detect face
+const detection = await faceapi.detectSingleFace(
+document.getElementById('video'),
+new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.3 })
+).withFaceLandmarks()
+.withFaceDescriptor();
+
+if (!detection) {
+showStatus('❌ No face detected! Try better lighting', 'error');
+enrollmentStatus.textContent = 'No face detected';
+return;
+}
+
+// Save face descriptor
+const user = auth.currentUser;
+await db.ref('users/' + user.uid).update({
+faceDescriptor: Array.from(detection.descriptor),
+faceEnrolled: true,
+createdAt: firebase.database.ServerValue.TIMESTAMP
+});
+
+showStatus('✅ Face enrolled successfully!', 'success');
+enrollmentStatus.textContent = 'Face enrolled successfully!';
+
+// Redirect to scan page
+setTimeout(() => {
+window.location.href = 'scan.html';
+}, 2000);
+} catch (err) {
+console.error('Face capture error:', err);
+showStatus('❌ Error: ' + err.message, 'error');
+enrollmentStatus.textContent = 'Error: ' + err.message;
+}
+}
+
+// Initialize
+if (auth.currentUser) {
+// Check if face is enrolled
+const user = auth.currentUser;
+db.ref('users/' + user.uid + '/faceEnrolled').once('value', (snap) => {
+if (snap.val()) {
+window.location.href = 'scan.html';
+} else {
+document.getElementById('authForm').style.display = 'none';
+document.getElementById('faceEnrollment').style.display = 'block';
+}
+});
+}
+</script>
+</body>
+</html>
+
