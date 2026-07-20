@@ -348,7 +348,7 @@ setTimeout(resolve, 2000);
 const detection = await Promise.race([
 faceapi.detectSingleFace(
 video,
-new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.3 })
+new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.2 })
 ).withFaceLandmarks().withFaceDescriptor(),
 new Promise((_, reject) => setTimeout(() => reject(new Error('Detection timeout')), 10000))
 ]);
