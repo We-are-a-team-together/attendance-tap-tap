@@ -104,6 +104,16 @@ animation: slideIn 0.3s ease;
 #video.active { border-color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
 .footer { text-align:center; font-size:12px; color:#64748b; margin-top:40px; padding:25px 0; border-top: 1px solid rgba(255,255,255,0.1); }
 .hidden { display: none !important; }
+.loading-spinner {
+display: inline-block;
+width: 20px;
+height: 20px;
+border: 3px solid rgba(255,255,255,0.3);
+border-radius: 50%;
+border-top-color: #fff;
+animation: spin 1s ease-in-out infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -114,7 +124,6 @@ animation: slideIn 0.3s ease;
 
 <div id="statusMsg" class="status-msg" style="display:none;"></div>
 
-<!-- Step 1: Profile & Account Creation -->
 <div id="authForm" class="card">
 <h2>Create Your Account</h2>
 
@@ -168,7 +177,6 @@ animation: slideIn 0.3s ease;
 <button class="btn btn-primary" onclick="handleAuth()">Create Account</button>
 </div>
 
-<!-- Step 2: Face Enrollment -->
 <div id="faceEnrollment" class="card hidden">
 <h2>Enroll Your Face</h2>
 <p style="color:#94a3b8; margin-bottom:20px;">Position your face clearly in the camera</p>
@@ -209,6 +217,7 @@ const enrollmentStatus = document.getElementById('enrollmentStatus');
 
 let videoStream = null;
 let modelsLoaded = false;
+let modelsLoading = false;
 
 function showStatus(msg, type) {
 statusMsg.textContent = msg;
@@ -238,7 +247,6 @@ showStatus('Creating account...', 'info');
 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
 const user = userCredential.user;
 
-// Save profile data to database immediately
 await db.ref('users/' + user.uid).set({
 name: name,
 company: company,
@@ -255,7 +263,6 @@ createdAt: firebase.database.ServerValue.TIMESTAMP
 showStatus('✅ Account created! Now enroll your face.', 'success');
 await new Promise(resolve => setTimeout(resolve, 1500));
 
-// Move to face enrollment
 authForm.classList.add('hidden');
 faceEnrollment.classList.remove('hidden');
 window.scrollTo(0, 0);
@@ -284,49 +291,97 @@ showStatus('❌ Camera error: ' + err.message, 'error');
 }
 }
 
-async function captureFace() {
-const user = auth.currentUser;
-if (!user) { showStatus(' Not logged in!', 'error'); return; }
+async function loadModels() {
+if (modelsLoaded || modelsLoading) return;
+
+modelsLoading = true;
+enrollmentStatus.textContent = 'Loading AI models (this may take 10-15 seconds)...';
 
 try {
-showStatus('Capturing face...', 'info');
-enrollmentStatus.textContent = 'Capturing face...';
-captureFaceBtn.disabled = true;
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
 
-if (!modelsLoaded) {
-enrollmentStatus.textContent = 'Loading AI models...';
-await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
-await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
-await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model');
+await Promise.all([
+faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+]);
+
 modelsLoaded = true;
+enrollmentStatus.textContent = '✅ AI models loaded! Click "Capture Face"';
+} catch (err) {
+console.error('Model loading error:', err);
+enrollmentStatus.textContent = '❌ Error loading models. Try again.';
+} finally {
+modelsLoading = false;
+}
 }
 
-await new Promise(resolve => setTimeout(resolve, 500));
+async function captureFace() {
+const user = auth.currentUser;
+if (!user) {
+showStatus('❌ Not logged in!', 'error');
+return;
+}
 
-const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.3 })).withFaceLandmarks().withFaceDescriptor();
+try {
+enrollmentStatus.textContent = 'Detecting face...';
+captureFaceBtn.disabled = true;
+
+// Load models if needed
+if (!modelsLoaded) {
+await loadModels();
+if (!modelsLoaded) {
+captureFaceBtn.disabled = false;
+return;
+}
+}
+
+// Wait for video to be ready
+if (!video.readyState >= 2) {
+await new Promise(resolve => {
+video.onloadeddata = resolve;
+setTimeout(resolve, 2000);
+});
+}
+
+// Detect face with timeout
+const detection = await Promise.race([
+faceapi.detectSingleFace(
+video,
+new faceapi.TinyFaceDetectorOptions({ inputSize: 640, scoreThreshold: 0.3 })
+).withFaceLandmarks().withFaceDescriptor(),
+new Promise((_, reject) => setTimeout(() => reject(new Error('Detection timeout')), 10000))
+]);
 
 if (!detection) {
 showStatus('❌ No face detected! Try better lighting', 'error');
-enrollmentStatus.textContent = 'No face detected. Try again.';
+enrollmentStatus.textContent = 'No face detected. Try again with better lighting.';
 captureFaceBtn.disabled = false;
 return;
 }
 
+// Save to database with timeout
 enrollmentStatus.textContent = 'Saving face data...';
-await db.ref('users/' + user.uid).update({
+await Promise.race([
+db.ref('users/' + user.uid).update({
 faceDescriptor: Array.from(detection.descriptor),
 faceEnrolled: true,
 lastUpdated: firebase.database.ServerValue.TIMESTAMP
-});
+}),
+new Promise((_, reject) => setTimeout(() => reject(new Error('Save timeout')), 10000))
+]);
 
 showStatus('✅ Face enrolled successfully!', 'success');
 enrollmentStatus.textContent = 'Success! Redirecting...';
 
-setTimeout(() => { window.location.href = 'scan.html'; }, 2000);
+setTimeout(() => {
+window.location.href = 'scan.html';
+}, 2000);
 
 } catch (err) {
 console.error('Face capture error:', err);
 showStatus('❌ Error: ' + err.message, 'error');
+enrollmentStatus.textContent = 'Error: ' + err.message + '. Try again.';
 captureFaceBtn.disabled = false;
 }
 }
