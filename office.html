@@ -41,6 +41,10 @@ tr:hover { background: rgba(255,255,255,0.05); }
 .in { background: rgba(16, 185, 129, 0.2); color:#34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
 .out { background: rgba(249, 115, 22, 0.2); color:#fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
 .time { color:#94a3b8; font-family:'Courier New', monospace; font-size:14px; white-space: nowrap; }
+.location-cell { font-size:12px; color:#a5b4fc; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.location-icon { display:inline-block; margin-right:5px; color:#f97316; }
+.map-link { color:#06b6d4; text-decoration:none; font-size:11px; margin-left:5px; white-space: nowrap; }
+.map-link:hover { text-decoration:underline; }
 .empty { text-align:center; color:#64748b; padding:50px; font-size:16px; }
 .footer { text-align:center; font-size:12px; color:#64748b; margin-top:40px; padding:25px 0; border-top: 1px solid rgba(255,255,255,0.1); }
 </style>
@@ -60,7 +64,7 @@ tr:hover { background: rgba(255,255,255,0.05); }
 </div>
 
 <div class="controls">
-<input type="text" id="search" placeholder="🔍 Filter by name, company, or site...">
+<input type="text" id="search" placeholder="🔍 Filter by name, company, or location...">
 <button class="btn-refresh" onclick="location.reload()">↻ Refresh</button>
 <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
 <button class="btn-clear" onclick="clearToday()">🗑 Clear Today</button>
@@ -73,7 +77,7 @@ tr:hover { background: rgba(255,255,255,0.05); }
 <tr>
 <th>Operative</th>
 <th>Company / Role</th>
-<th>Site</th>
+<th>Location</th>
 <th>Method</th>
 <th>Action</th>
 <th>Time</th>
@@ -125,12 +129,10 @@ try {
 const today = todayStart();
 const todays = allRecords.filter(r => r.timestamp && r.timestamp >= today);
 
-// Calculate stats
 const uniqueIds = new Set(todays.map(r => r.userId)).size;
 const totalIns = todays.filter(r => r.action === 'IN').length;
 const recent = todays.filter(r => Date.now() - r.timestamp < 15 * 60 * 1000).length;
 
-// Calculate on-site (Last action was IN)
 let onSiteNow = 0;
 const latestActions = {};
 todays.sort((a,b) => a.timestamp - b.timestamp).forEach(r => {
@@ -152,8 +154,8 @@ let records = todays.filter(r => {
 const user = allUsers[r.userId] || {};
 const name = (user.name || '').toLowerCase();
 const company = (user.company || '').toLowerCase();
-const site = (r.siteId || '').toLowerCase();
-return name.includes(filter) || company.includes(filter) || site.includes(filter);
+const location = (r.location || '').toLowerCase();
+return name.includes(filter) || company.includes(filter) || location.includes(filter);
 });
 
 records.sort((a, b) => b.timestamp - a.timestamp);
@@ -167,10 +169,14 @@ const time = new Date(r.timestamp).toLocaleTimeString();
 const methodClass = r.method === 'FACE' ? 'face' : 'nfc';
 const actionClass = r.action === 'IN' ? 'in' : 'out';
 
+let locationHtml = r.location ?
+`<span class="location-icon">📍</span><span class="location-cell">${escapeHtml(r.location)}</span>` :
+'<span style="color:#64748b">No location</span>';
+
 return `<tr>
 <td><div style="font-weight:700; font-size:15px;">${escapeHtml(user.name || 'Unknown User')}</div></td>
 <td><div style="font-size:14px;">${escapeHtml(user.company || '')}</div><div style="font-size:12px; color:#94a3b8;">${escapeHtml(user.role || '')}</div></td>
-<td><div style="font-weight:600; font-size:14px; color:#a855f7;">${escapeHtml(r.siteId || 'Unknown Site')}</div></td>
+<td>${locationHtml}</td>
 <td><span class="method-badge ${methodClass}">${r.method || 'Unknown'}</span></td>
 <td><span class="action-badge ${actionClass}">${r.action || 'Unknown'}</span></td>
 <td class="time">${time}<br><span style="font-size:11px; color:#64748b">${timeAgo(r.timestamp)}</span></td>
@@ -182,7 +188,6 @@ console.error('Render error:', err);
 }
 }
 
-// Listen for data
 signinsRef.on('value', snap => {
 allRecords = [];
 snap.forEach(child => { const val = child.val(); if(val) allRecords.push({ id: child.key, ...val }); });
@@ -201,12 +206,12 @@ function exportCSV() {
 const today = todayStart();
 const data = allRecords.filter(r => r.timestamp && r.timestamp >= today);
 if (data.length === 0) { alert('No records to export'); return; }
-let csv = 'Date,Time,Name,Company,Role,Site,Method,Action\n';
+let csv = 'Date,Time,Name,Company,Role,Location,Method,Action\n';
 data.sort((a, b) => a.timestamp - b.timestamp).forEach(r => {
 const user = allUsers[r.userId] || {};
 const date = new Date(r.timestamp).toISOString().split('T')[0];
 const time = new Date(r.timestamp).toLocaleTimeString();
-csv += `"${date}","${time}","${user.name || ''}","${user.company || ''}","${user.role || ''}","${r.siteId || ''}","${r.method || ''}","${r.action || ''}"\n`;
+csv += `"${date}","${time}","${user.name || ''}","${user.company || ''}","${user.role || ''}","${r.location || ''}","${r.method || ''}","${r.action || ''}"\n`;
 });
 const blob = new Blob([csv], { type: 'text/csv' });
 const url = URL.createObjectURL(blob);
